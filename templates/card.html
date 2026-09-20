@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="glass-panel">
+    <h3 style="font-weight: 300;">بازیابی کارت تردد</h3>
+    <br>
+    {% if student_name %}
+        <h2 style="color: #00f2fe;">{{ student_name }}</h2>
+        <img src="{{ url_for('get_qrcode', sid=sid) }}" alt="QR Code" style="border-radius: 10px; margin: 20px 0;">
+        <br>
+        <a href="{{ url_for('get_qrcode', sid=sid) }}" class="btn btn-primary" download>دانلود مجدد کارت</a>
+    {% else %}
+        <form action="{{ url_for('view_card') }}" method="POST">
+            <input type="text" name="student_id" placeholder="جستجوی شناسه..." required autocomplete="off" 
+       inputmode="numeric" 
+       pattern="[0-9۰-۹]+" 
+       oninvalid="this.setCustomValidity('برای جستجوی کارت، فقط مجاز به وارد کردن اعداد هستید')" 
+       oninput="this.setCustomValidity('')"
+       style="box-sizing: border-box;">
+            <button type="submit" class="btn btn-primary">بازیابی اطلاعات</button>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

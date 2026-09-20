@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="glass-panel" style="text-align: right;">
+    <h3 style="font-weight: 300; text-align: center;">رتبه‌بندی زمانی اعضا</h3><br>
+    <div style="overflow-x: auto;">
+        {% if table_html %}{{ table_html | safe }}{% else %}<p style="text-align:center;">داده‌ای برای پردازش وجود ندارد.</p>{% endif %}
+    </div>
+</div>
+{% endblock %}

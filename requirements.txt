@@ -1,0 +1,6 @@
+Flask==3.0.2
+pandas==2.2.1
+qrcode[pil]==7.4.2
+reportlab==4.1.0
+arabic-reshaper==3.0.0
+python-bidi==0.4.2

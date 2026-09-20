@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="glass-panel">
+    <h3 style="font-weight: 300;">دسترسی ادمین</h3><br>
+    <form action="{{ url_for('admin') }}" method="POST">
+        <input type="password" name="password" placeholder="کد احراز هویت را وارد کنید" required><br>
+        <button type="submit" class="btn btn-primary">ورود امن</button>
+    </form>
+</div>
+{% endblock %}

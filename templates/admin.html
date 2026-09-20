@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="metrics-container">
+    <div class="metric-card"><h3>کل اعضای ثبت‌نامی</h3><p>{{ stats.students }} نفر</p></div>
+    <div class="metric-card"><h3>تعداد کل ترددها</h3><p>{{ stats.logs }} رکورد</p></div>
+    <div class="metric-card"><h3>حاضرین فعلی</h3><p>{{ stats.active }} نفر</p></div>
+</div>
+<div class="glass-panel" style="text-align: right;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3>تاریخچه سیستم</h3>
+        <a href="{{ url_for('logout') }}" class="btn">پایان نشست</a>
+    </div>
+    <a href="{{ url_for('download_pdf') }}" class="btn btn-primary">دانلود PDF ترددها</a>
+    <a href="{{ url_for('download_csv', type='logs') }}" class="btn">دانلود CSV ترددها</a>
+    <a href="{{ url_for('download_csv', type='students') }}" class="btn">دانلود لیست اعضا</a>
+    <hr style="border-color: rgba(255,255,255,0.05); margin: 20px 0;">
+    <div style="overflow-x: auto;">
+        {% if logs_table %}{{ logs_table | safe }}{% else %}<p>رکوردی یافت نشد.</p>{% endif %}
+    </div>
+</div>
+{% endblock %}

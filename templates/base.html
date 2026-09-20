@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LabGate - System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="sidebar">
+        <br>
+        <a href="{{ url_for('index') }}">⚪ ورود / خروج</a>
+        <a href="{{ url_for('register') }}">⚪ ثبت‌نام هویت</a>
+        <a href="{{ url_for('view_card') }}">⚪ مشاهده کارت</a>
+        <a href="{{ url_for('leaderboard') }}">⚪ رتبه‌بندی</a>
+        <a href="{{ url_for('admin') }}">⚪ داشبورد مدیریت</a>
+        
+        <div class="developer-signature">
+            DESIGNED BY<br><b style="color: #fff;"> Arka and Nirad</b>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="igloo-banner">
+            <h1>LabGate</h1>
+            <p>ACCESS & PRESENCE MANAGEMENT</p>
+        </div>
+
+        <div class="alerts">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

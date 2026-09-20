@@ -1,0 +1,359 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;500;700;900&display=swap');
+
+body {
+    font-family: 'Vazirmatn', sans-serif;
+    direction: rtl;
+    /* پس‌زمینه سرمه‌ای/طوسی بسیار تیره و مات (آرام‌بخش‌ترین رنگ برای چشم) */
+    background-color: #0F172A; 
+    background-image: linear-gradient(135deg, #0B1120 0%, #1E293B 100%);
+    background-attachment: fixed;
+    color: #F1F5F9; /* سفیدِ ملایم (استخوانی) به جای سفید خالص */
+    margin: 0;
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* منوی کناری - شیشه‌ای تاریک */
+.sidebar {
+    width: 250px;
+    background-color: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: -5px 0 25px rgba(0,0,0,0.3);
+    padding: 30px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: fixed;
+    height: 100vh;
+    box-sizing: border-box;
+    z-index: 100;
+}
+
+.sidebar a {
+    color: #94A3B8; /* طوسی روشن */
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    display: block;
+    font-weight: 500;
+}
+
+.sidebar a:hover, .sidebar a.active {
+    background-color: rgba(56, 189, 248, 0.1); /* هاله آبی محو */
+    color: #38BDF8; /* آبی درخشان و خوانا */
+    transform: translateX(-5px);
+}
+
+.developer-signature {
+    margin-top: auto;
+    margin-bottom: 30px;
+    text-align: center;
+    color: #64748B;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+.developer-signature b { color: #CBD5E1; }
+
+/* محتوای اصلی */
+.main-content {
+    margin-right: 280px;
+    padding: 40px;
+    flex-grow: 1;
+    max-width: 1000px;
+    margin-left: auto;
+    width: calc(100% - 280px); /* 👈 عرض دقیق: کل صفحه منهای فضای منوی کناری */
+    box-sizing: border-box; /* 👈 جلوگیری از بیرون‌زدگی */
+}
+
+/* بنر سایت */
+.igloo-banner {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.igloo-banner h1 {
+    font-size: 4rem;
+    font-weight: 900;
+    letter-spacing: -2px;
+    margin: 0;
+    /* گرادیان متن از سفید به آبی روشن */
+    background: -webkit-linear-gradient(#F8FAFC, #7DD3FC);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.igloo-banner p {
+    color: #94A3B8;
+    font-weight: 300;
+    letter-spacing: 2px;
+    font-size: 1.1rem;
+    margin-top: 5px;
+}
+
+/* پنل‌های شیشه‌ای نرم (Glass Panels) */
+.glass-panel {
+    background: rgba(30, 41, 59, 0.6); /* طوسی-سرمه‌ای نیمه شفاف */
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    border-radius: 24px;
+    padding: 30px;
+    backdrop-filter: blur(12px);
+    text-align: center;
+}
+
+/* فیلدهای ورودی (Inputs) */
+input[type="text"], input[type="password"] {
+    width: 90%;
+    max-width: 400px;
+    background-color: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #F8FAFC;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 16px;
+    font-family: inherit;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* قفل کردن فرم‌ها در مرکز */
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+input:focus {
+    outline: none;
+    border-color: #38BDF8;
+    background-color: rgba(30, 41, 59, 0.9);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+}
+
+/* دکمه‌ها */
+.btn {
+    background-color: transparent;
+    color: #E2E8F0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 40px;
+    padding: 12px 30px;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background-color: #0EA5E9; /* آبی اقیانوسی */
+    color: #FFFFFF;
+    border: none;
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+}
+
+.btn-primary:hover {
+    background-color: #0284C7;
+    color: #FFFFFF;
+    border: none;
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+}
+
+/* پیام‌های سیستم (الرت‌ها) */
+.alerts { margin-bottom: 20px; }
+.alert { padding: 15px; border-radius: 12px; margin-bottom: 10px; text-align: center; font-weight: 500; }
+.alert.success { background: rgba(16, 185, 129, 0.1); border: 1px solid #10B981; color: #34D399; }
+.alert.error { background: rgba(239, 68, 68, 0.1); border: 1px solid #EF4444; color: #F87171; }
+
+/* جداول دیتافریم */
+.dataframe {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: transparent;
+}
+.dataframe th, .dataframe td {
+    padding: 15px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: center;
+    color: #CBD5E1;
+}
+.dataframe th { 
+    background-color: rgba(255, 255, 255, 0.03); 
+    color: #F1F5F9;
+    font-weight: 700;
+}
+
+/* کارت‌های آماری مدیریت */
+.metrics-container { display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;}
+.metric-card {
+    min-width: 200px;
+    flex: 1;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    padding: 25px 20px;
+    text-align: center;
+    transition: transform 0.3s ease;
+    backdrop-filter: blur(12px);
+}
+.metric-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+.metric-card h3 { color: #94A3B8; font-size: 14px; margin: 0 0 10px 0; font-weight: 500; }
+.metric-card p { font-size: 28px; margin: 0; font-weight: 900; color: #F8FAFC; }
+
+/* ========================================= */
+/* مدیا کوئری حرفه‌ای با تکنولوژی Grid برای موبایل */
+/* ========================================= */
+@media screen and (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        border-left: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        
+        /* استفاده از Grid برای ایجاد نظم کامل و شبکه‌ای */
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* دقیقاً دو ستون مساوی */
+        gap: 10px; /* فاصله یکسان بین تمام دکمه‌ها */
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        z-index: 10;
+    }
+
+    /* مخفی کردن فاصله‌های خالی (<br>) در موبایل تا شبکه‌بندی خراب نشود */
+    .sidebar br {
+        display: none;
+    }
+
+    /* استایل دکمه‌های منو در موبایل */
+    .sidebar a {
+        padding: 12px 5px;
+        font-size: 13px;
+        text-align: center;
+        margin: 0;
+        background-color: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* دکمه داشبورد مدیریت (دکمه پنجم) کل عرض صفحه را بگیرد */
+    .sidebar a:nth-of-type(5) {
+        grid-column: span 2;
+        background-color: rgba(56, 189, 248, 0.05); /* کمی رنگ متمایز */
+    }
+
+    /* امضای طراح (Arka and Nirad) کل عرض را بگیرد و منظم شود */
+    .developer-signature {
+        grid-column: span 2;
+        margin-top: 15px;
+        margin-bottom: 0;
+        width: 100%;
+    }
+
+    /* تنظیمات محتوای اصلی برای موبایل */
+    .main-content {
+        margin-right: 0;
+        padding: 20px 10px; /* کاهش حاشیه برای جا شدن بهتر در موبایل */
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* وسط‌چین کردن کل محتوای صفحه */
+    }
+
+    .igloo-banner {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* تیتر LabGate دقیقاً وسط قرار می‌گیرد */
+    }
+
+    .igloo-banner h1 {
+        font-size: 2.2rem;
+    }
+    
+    .igloo-banner p {
+        font-size: 0.85rem;
+        text-align: center;
+    }
+
+    .glass-panel {
+        width: 100%; /* پنل شیشه‌ای کل عرض مجاز را می‌گیرد */
+        box-sizing: border-box;
+        padding: 25px 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    input[type="text"], input[type="password"] {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .dataframe {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+/* ========================================= */
+/* حل قطعی مشکل بیرون‌زدگی جدول‌ها در موبایل */
+/* ========================================= */
+
+.glass-panel {
+    max-width: 100vw; 
+    overflow-x: hidden; /* جلوگیری از بزرگ شدن کل پنل شیشه‌ای */
+}
+
+/* کادری که جدول داخل آن قرار دارد */
+.glass-panel div[style*="overflow-x"] {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch; /* اسکرول لمسی و روان برای گوشی */
+    padding-bottom: 10px; /* فضای خالی برای نوار اسکرول */
+}
+
+/* اجبار جدول به حفظ ساختار و اسکرول خوردن */
+.dataframe {
+    width: 100%;
+    min-width: max-content; /* این خط معجزه می‌کند: جدول به جای فشرده شدن، اسکرول می‌خورد */
+    display: table !important; /* خنثی کردن کدهای قبلی که باعث به هم ریختگی می‌شدند */
+}
+
+/* کوچک کردن فونت جدول در موبایل برای جاگیری بهتر */
+@media screen and (max-width: 768px) {
+    .dataframe th, .dataframe td {
+        padding: 10px 8px;
+        font-size: 13px;
+    }
+}
