@@ -59,7 +59,7 @@ def generate_pdf_report(df):
         reshaped = arabic_reshaper.reshape(str(text))
         return get_display(reshaped)
 
-    elements.append(Paragraph(persian_text("📋 گزارش جامع تردد دانشجویان کارگاه - توسعه یافته توسط عرفان رشیدی"), title_style))
+    elements.append(Paragraph(persian_text("📋 گزارش جامع تردد دانشجویان کارگاه"), title_style))
     
     if not df.empty:
         df_rtl = df[df.columns[::-1]]
