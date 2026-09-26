@@ -1,9 +1,57 @@
 {% extends 'base.html' %}
+
 {% block content %}
+
+<!-- ترفند CSS برای رنگ‌آمیزی ۳ نفر اول جدول بدون نیاز به تغییر کدهای پایتون (Pandas) -->
+<style>
+    /* نفر اول: طلایی */
+    .dataframe tbody tr:nth-child(1) {
+        background-color: rgba(251, 191, 36, 0.15) !important;
+        color: #F59E0B !important;
+        font-weight: 900 !important;
+    }
+    /* نفر دوم: نقره‌ای */
+    .dataframe tbody tr:nth-child(2) {
+        background-color: rgba(148, 163, 184, 0.15) !important;
+        color: #94A3B8 !important;
+        font-weight: 800 !important;
+    }
+    /* نفر سوم: برنزی */
+    .dataframe tbody tr:nth-child(3) {
+        background-color: rgba(180, 83, 9, 0.15) !important;
+        color: #B45309 !important;
+        font-weight: 800 !important;
+    }
+</style>
+
+<!-- بخش ویژه: نفر برتر هفته -->
+{% if top_week %}
+<div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 20px; padding: 25px; text-align: center; max-width: 400px; margin: 0 auto 40px auto; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.1); backdrop-filter: blur(10px);">
+    <h3 style="color: #F59E0B; margin-top: 0; font-weight: 800;">🏆 نفر برتر هفته 🏆</h3>
+    
+    <!-- بررسی وجود عکس پروفایل در دیتابیس -->
+    {% if top_week[1] %}
+        <img src="{{ url_for('static', filename=top_week[1]) }}" alt="Profile" style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid #F59E0B; object-fit: cover; margin: 15px 0; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);">
+    {% else %}
+        <!-- نمایش دایره پیش‌فرض در صورت نداشتن عکس -->
+        <div style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid #F59E0B; background: #334155; display: inline-block; margin: 15px 0;"></div>
+    {% endif %}
+    
+    <h3 style="color: #F8FAFC; margin: 0; font-size: 1.5rem;">{{ top_week[0] }}</h3>
+    <p style="color: #94A3B8; margin-top: 8px; font-size: 0.9rem;">بیشترین زمان حضور در ۷ روز گذشته</p>
+</div>
+{% endif %}
+
+<!-- جدول رتبه‌بندی کل اعضا -->
 <div class="glass-panel" style="text-align: right;">
     <h3 style="font-weight: 300; text-align: center;">رتبه‌بندی زمانی اعضا</h3><br>
     <div style="overflow-x: auto;">
-        {% if table_html %}{{ table_html | safe }}{% else %}<p style="text-align:center;">داده‌ای برای پردازش وجود ندارد.</p>{% endif %}
+        {% if table_html %}
+            {{ table_html | safe }}
+        {% else %}
+            <p style="text-align:center;">داده ای برای پردازش وجود ندارد.</p>
+        {% endif %}
     </div>
 </div>
+
 {% endblock %}

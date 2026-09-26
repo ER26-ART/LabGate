@@ -12,5 +12,68 @@
        oninput="this.setCustomValidity('')">
         <button type="submit" class="btn btn-primary">ثبت سیستمی</button>
     </form>
+    <!-- بخش نمایش افراد آنلاین -->
+<div style="margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+    <h4 style="color: #F8FAFC; text-align: center; margin-bottom: 20px; font-weight: 300;">افراد حاضر در کارگاه</h4>
+    
+    {% if online_users %}
+        <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+            {% for user in online_users %}
+                <div style="background: rgba(15, 23, 42, 0.8); padding: 10px 20px; border-radius: 40px; border: 1px solid rgba(16, 185, 129, 0.2); color: #E2E8F0; display: flex; align-items: center; font-size: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <span class="status-online"></span>
+                    {{ user[1] }} <!-- نام فرد از دیتابیس خوانده می‌شود -->
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="text-align: center; color: #64748B; font-size: 14px;">در حال حاضر کسی در کارگاه حضور ندارد.</p>
+    {% endif %}
 </div>
+</div>
+<!-- ========================================== -->
+<!-- کدهای هوشمند برای تغییر رنگ و متن دکمه ثبت -->
+<!-- ========================================== -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // ۱. دریافت شناسه‌های دانشجویی افراد حاضر از دیتابیس پایتون
+        // این حلقه پایتونی، کدها را می‌خواند و به صورت آرایه جاوا اسکریپت در مرورگر تزریق می‌کند
+        const activeIds = [
+            {% if online_users %}
+                {% for user in online_users %}
+                    "{{ user[0] }}",
+                {% endfor %}
+            {% endif %}
+        ];
+
+        // ۲. پیدا کردن کادر شماره دانشجویی و دکمه ثبت
+        const inputField = document.querySelector('input[name="student_id"]');
+        const submitBtn = document.querySelector('button[type="submit"]');
+
+        // ۳. بررسی لحظه‌ای ورودی کاربر
+        if(inputField && submitBtn) {
+            inputField.addEventListener('input', function() {
+                const sid = this.value.trim(); // خواندن متن و حذف فاصله‌های اضافی
+                
+                if (sid.length === 0) {
+                    // حالت پیش‌فرض (کادر خالی) - دکمه آبی
+                    submitBtn.innerHTML = 'ثبت سیستمی';
+                    submitBtn.style.backgroundColor = ''; // بازگشت به استایل فایل CSS
+                    submitBtn.style.boxShadow = '';
+                } 
+                else if (activeIds.includes(sid)) {
+                    // اگر شماره در لیست آنلاین‌ها بود - دکمه قرمز (خروج)
+                    submitBtn.innerHTML = 'ثبت خروج (پایان حضور)';
+                    submitBtn.style.backgroundColor = '#EF4444'; 
+                    submitBtn.style.boxShadow = '0 4px 15px rgba(239, 68, 68, 0.4)';
+                } 
+                else {
+                    // اگر شماره در لیست نبود - دکمه سبز (ورود)
+                    submitBtn.innerHTML = 'ثبت ورود (شروع حضور)';
+                    submitBtn.style.backgroundColor = '#10B981'; 
+                    submitBtn.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

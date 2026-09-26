@@ -219,6 +219,47 @@ input:focus {
 .metric-card h3 { color: #94A3B8; font-size: 14px; margin: 0 0 10px 0; font-weight: 500; }
 .metric-card p { font-size: 28px; margin: 0; font-weight: 900; color: #F8FAFC; }
 
+
+/* ========================================= */
+/* استایل‌های وضعیت آنلاین و رتبه‌بندی */
+/* ========================================= */
+
+/* دایره سبز پالس‌زن برای افراد حاضر در کارگاه */
+.status-online {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: #10B981;
+    border-radius: 50%;
+    margin-right: 8px;
+    box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+    animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* رنگ‌بندی ۳ نفر برتر جدول رتبه‌بندی */
+.rank-gold {
+    background-color: rgba(251, 191, 36, 0.1) !important;
+    color: #F59E0B;
+    font-weight: 900;
+}
+.rank-silver {
+    background-color: rgba(148, 163, 184, 0.1) !important;
+    color: #94A3B8;
+    font-weight: 800;
+}
+.rank-bronze {
+    background-color: rgba(180, 83, 9, 0.1) !important;
+    color: #B45309;
+    font-weight: 800;
+}
+
+
 /* ========================================= */
 /* مدیا کوئری حرفه‌ای با تکنولوژی Grid برای موبایل */
 /* ========================================= */

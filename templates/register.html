@@ -4,14 +4,36 @@
 <div class="glass-panel">
     <h3 style="font-weight: 300;">ایجاد هویت جدید در سیستم</h3>
     <br>
-    <form action="{{ url_for('register') }}" method="POST">
-        <input type="text" name="name" placeholder="نام و نام خانوادگی کامل" required><br>
-        <input type="text" name="student_id" placeholder="شناسه یکتا (شماره دانشجویی)" required autocomplete="off" 
-       inputmode="numeric" 
-       pattern="[0-9۰-۹]+" 
-       oninvalid="this.setCustomValidity('شماره دانشجویی تنها حاوی عدد می باشد')" 
-       oninput="this.setCustomValidity('')">
-        <button type="submit" class="btn btn-primary">صدور کارت هوشمند</button>
-    </form>
+    <form action="{{ url_for('register') }}" method="POST" enctype="multipart/form-data">
+    
+    <input type="text" name="name" placeholder="نام و نام خانوادگی کامل" required>
+    
+    <input type="text" name="student_id" placeholder="شناسه یکتا (شماره دانشجویی)" required autocomplete="off" 
+           inputmode="numeric" pattern="[0-9۰-۹]+" 
+           oninvalid="this.setCustomValidity('شماره دانشجویی تنها حاوی عدد می باشد')" 
+           oninput="this.setCustomValidity('')">
+
+    <!-- فیلد نام کاربری -->
+    <input type="text" name="username" placeholder="نام کاربری (حداقل ۴ حرف انگلیسی)" required
+           pattern="[a-zA-Z0-9_]{4,}"
+           oninvalid="this.setCustomValidity('نام کاربری باید حداقل ۴ حرف و فقط شامل حروف انگلیسی و اعداد باشد')"
+           oninput="this.setCustomValidity('')"
+           style="direction: ltr; text-align: center;">
+
+    <!-- فیلد رمز عبور -->
+    <input type="password" name="password" placeholder="رمز عبور (حداقل ۸ کاراکتر)" required
+           minlength="8"
+           oninvalid="this.setCustomValidity('رمز عبور باید حداقل ۸ کاراکتر باشد')"
+           oninput="this.setCustomValidity('')"
+           style="direction: ltr; text-align: center;">
+
+    <!-- بخش آپلود عکس پروفایل -->
+    <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: right;">
+        <label style="color: #94A3B8; font-size: 14px; margin-bottom: 10px; display: block;">عکس پروفایل خود را انتخاب کنید:</label>
+        <input type="file" name="profile_photo" accept="image/*" required style="color: #F8FAFC; width: 100%;">
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width: 100%;">صدور کارت هوشمند و ثبت‌نام</button>
+</form>
 </div>
 {% endblock %}

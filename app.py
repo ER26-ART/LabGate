@@ -13,8 +13,14 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import os
 import urllib.request
+import os
+from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash
 
 app = Flask(__name__)
+UPLOAD_FOLDER = os.path.join('static', 'uploads', 'profiles')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # کلید امنیتی برای کارکرد سشن‌ها و پیام‌های فلش (Flash Messages)
 app.secret_key = 'super_secret_arka_key' 
 db = WorkshopDB()
@@ -96,7 +102,8 @@ def generate_pdf_report(df):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    online_users = db.get_active_students()
+    return render_template('index.html', online_users=online_users)
 
 @app.route('/scan')
 def scan():
@@ -125,16 +132,40 @@ def manual_scan():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        # دریافت اطلاعات از فرم HTML
         name = request.form.get('name')
         sid = request.form.get('student_id')
-        if name and sid:
+        username = request.form.get('username')
+        password = request.form.get('password')
+        file = request.files.get('profile_photo')
+
+        if name and sid and username and password:
             clean_id = convert_persian_to_english(sid)
-            status, msg = db.add_student(clean_id, name)
+            
+            # ۱. پردازش و ذخیره عکس پروفایل
+            image_db_path = ""
+            if file and file.filename != '':
+                # ساخت نام امن برای عکس ترکیبی از شماره دانشجویی و اسم فایل
+                filename = secure_filename(f"{clean_id}_{file.filename}")
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                image_db_path = f"uploads/profiles/{filename}"
+
+            # ۲. هش کردن رمز عبور برای امنیت بالا
+            hashed_password = generate_password_hash(password)
+
+            # ۳. ارسال به دیتابیس
+            status, msg = db.add_student(clean_id, name, username, hashed_password, image_db_path)
+            
             if status:
                 flash("هویت با موفقیت ثبت شد.", "success")
+                # انتقال به صفحه صدور کارت با شماره دانشجویی
                 return redirect(url_for('view_card', sid=clean_id))
             else:
                 flash(msg, "error")
+        else:
+            flash("لطفاً تمام فیلدها را پر کنید.", "error")
+            
     return render_template('register.html')
 
 @app.route('/card', methods=['GET', 'POST'])
@@ -159,7 +190,8 @@ def leaderboard():
     df = db.get_leaderboard_df()
     # تبدیل دیتافریم به HTML تمیز برای نمایش در فرانت‌اند
     table_html = df.to_html(classes='dataframe', index=False, justify='center') if not df.empty else None
-    return render_template('leaderboard.html', table_html=table_html)
+    top_week = db.get_top_student_of_week()
+    return render_template('leaderboard.html', table_html=table_html, top_week=top_week)
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():

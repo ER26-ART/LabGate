@@ -19,7 +19,10 @@ class WorkshopDB:
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS students (
                     student_id TEXT PRIMARY KEY,
-                    name TEXT NOT NULL
+                    name TEXT NOT NULL,
+                    username TEXT UNIQUE,
+                    password_hash TEXT,
+                    profile_image TEXT
                 )
             ''')
             cursor.execute('''
@@ -33,15 +36,20 @@ class WorkshopDB:
             ''')
             conn.commit()
 
-    def add_student(self, student_id, name):
+    def add_student(self, student_id, name, username, password_hash, profile_image):
         try:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute("INSERT INTO students (student_id, name) VALUES (?, ?)", (student_id, name))
+                cursor.execute(
+                    "INSERT INTO students (student_id, name, username, password_hash, profile_image) VALUES (?, ?, ?, ?, ?)", 
+                    (student_id, name, username, password_hash, profile_image)
+                )
                 conn.commit()
-            return True, "دانشجو با موفقیت ثبت شد."
+                return True, "دانشجو با موفقیت ثبت شد."
         except sqlite3.IntegrityError:
-            return False, "این شماره دانشجویی قبلاً ثبت شده است."
+            return False, "این شماره دانشجویی یا نام کاربری قبلاً ثبت شده است."
+        except Exception as e:
+            return False, f"خطا در ثبت‌نام: {e}"
 
     def get_student(self, student_id):
         with self.get_connection() as conn:
@@ -52,6 +60,23 @@ class WorkshopDB:
                 return result[0]
             return None
 
+    def get_active_students(self):
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                # جستجوی تمام کسانی که زمان خروج آن‌ها هنوز ثبت نشده است (در کارگاه هستند)
+                cursor.execute('''
+                    SELECT s.student_id, s.name 
+                    FROM students s
+                    JOIN attendance_logs a ON s.student_id = a.student_id
+                    WHERE a.exit_time IS NULL
+                ''')
+                active_users = cursor.fetchall()
+                return active_users
+        except Exception as e:
+            print(f"Error fetching active students: {e}")
+            return []
+    
     def process_scan(self, student_id):
         if not self.get_student(student_id):
             return False, "دانشجو در سیستم یافت نشد. لطفاً ابتدا ثبت‌نام کنید."
@@ -114,6 +139,17 @@ class WorkshopDB:
             df.index.name = 'ردیف'
             df = df.reset_index()
         return df
+    def get_all_students_raw(self):
+        """دریافت داده‌های خام اعضا برای جدول مدیریت (شامل نام کاربری)"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                # ما در اینجا مستقیماً username را هم از دیتابیس می‌کشیم بیرون
+                cursor.execute("SELECT student_id, name, username FROM students")
+                return cursor.fetchall()
+        except Exception as e:
+            print(f"Error fetching raw students: {e}")
+            return []
 
     def get_leaderboard_df(self):
         query = '''
@@ -158,3 +194,79 @@ class WorkshopDB:
         leaderboard['شماره دانشجویی'] = leaderboard['شماره دانشجویی'].apply(lambda x: f'{x}')
         
         return leaderboard
+    def get_top_student_of_week(self):
+        """
+        محاسبه نفر برتر هفته:
+        SQLite تابع مستقیمی برای اختلاف زمان ندارد، بنابراین از julianday استفاده می‌کنیم
+        تا روزها را به دست آورده و در ۲۴ (ساعت) و ۶۰ (دقیقه) ضرب کنیم.
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT s.name, s.profile_image,
+                           SUM(CAST((julianday(IFNULL(a.exit_time, datetime('now', 'localtime'))) - julianday(a.entry_time)) * 24 * 60 AS INTEGER)) as total_minutes
+                    FROM students s
+                    JOIN attendance_logs a ON s.student_id = a.student_id
+                    -- فیلتر کردن رکوردهایی که مربوط به ۷ روز گذشته هستند
+                    WHERE a.entry_time >= date('now', '-7 days', 'localtime')
+                    GROUP BY s.student_id
+                    ORDER BY total_minutes DESC
+                    LIMIT 1
+                ''')
+                return cursor.fetchone()
+        except Exception as e:
+            print(f"Error fetching top student of the week: {e}")
+            return None
+    def delete_student(self, student_id):
+        """حذف کامل یک دانشجو و تمام رکوردهای تردد او"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                # ابتدا حذف تمام رکوردهای تردد این شخص
+                cursor.execute("DELETE FROM attendance_logs WHERE student_id = ?", (student_id,))
+                # سپس حذف خود شخص از جدول اصلی
+                cursor.execute("DELETE FROM students WHERE student_id = ?", (student_id,))
+                conn.commit()
+                return True
+        except Exception as e:
+            print(f"Error deleting student: {e}")
+            return False
+
+    def get_student_info(self, student_id):
+        """دریافت اطلاعات یک شخص برای نمایش در فرم ویرایش"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT student_id, name, username FROM students WHERE student_id = ?", (student_id,))
+                return cursor.fetchone()
+        except Exception as e:
+            print(f"Error fetching student info: {e}")
+            return None
+
+    def update_student(self, old_student_id, new_student_id, name, username):
+        """ذخیره اطلاعات جدید دانشجو پس از ویرایش"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                # آپدیت جدول اصلی
+                cursor.execute('''
+                    UPDATE students 
+                    SET student_id = ?, name = ?, username = ?
+                    WHERE student_id = ?
+                ''', (new_student_id, name, username, old_student_id))
+                
+                # اگر شماره دانشجویی عوض شد، باید رکوردهای تردد او هم با شماره جدید آپدیت شوند
+                if old_student_id != new_student_id:
+                    cursor.execute('''
+                        UPDATE attendance_logs 
+                        SET student_id = ? 
+                        WHERE student_id = ?
+                    ''', (new_student_id, old_student_id))
+                
+                conn.commit()
+                return True, "اطلاعات با موفقیت بروزرسانی شد."
+        except sqlite3.IntegrityError:
+            return False, "این شماره دانشجویی یا نام کاربری در سیستم وجود دارد و تکراری است."
+        except Exception as e:
+            return False, f"خطا در بروزرسانی: {e}"
