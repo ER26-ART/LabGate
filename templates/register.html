@@ -15,7 +15,7 @@
 
     <!-- فیلد نام کاربری -->
     <input type="text" name="username" placeholder="نام کاربری (حداقل ۴ حرف انگلیسی)" required
-           pattern="[a-zA-Z0-9_]{4,}"
+           pattern="[a-zA-Z0-9_-]{4,}"
            oninvalid="this.setCustomValidity('نام کاربری باید حداقل ۴ حرف و فقط شامل حروف انگلیسی و اعداد باشد')"
            oninput="this.setCustomValidity('')"
            style="direction: ltr; text-align: center;">
