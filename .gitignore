@@ -13,4 +13,4 @@ env/
 # فایل‌های سیستمی و تنظیمات ویرایشگرها
 .DS_Store
 .vscode/
-.idea/
+.idea/.env

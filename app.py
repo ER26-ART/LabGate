@@ -13,16 +13,29 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import os
 import urllib.request
-import os
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
+import requests
+from authlib.integrations.flask_client import OAuth
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = Flask(__name__)
 UPLOAD_FOLDER = os.path.join('static', 'uploads', 'profiles')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-# کلید امنیتی برای کارکرد سشن‌ها و پیام‌های فلش (Flash Messages)
-app.secret_key = 'super_secret_arka_key' 
+# کلید امنیتی برای کارکرد سشن‌ها و پیام‌های فلش (Flash Messages) 
+app.secret_key = os.environ.get('SECRET_KEY', 'default_fallback_key')
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.environ.get('GOOGLE_CLIENT_ID'),
+    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'},
+)
 db = WorkshopDB()
 
 # دانلود و ثبت فونت فارسی برای ساخت PDF
@@ -132,8 +145,8 @@ def manual_scan():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # دریافت اطلاعات از فرم HTML
-        name = request.form.get('name')
+        # اگر نام از گوگل آمده باشد آن را می‌گیریم، در غیر این صورت از فرم HTML
+        name = session.get('google_name') or request.form.get('name')
         sid = request.form.get('student_id')
         username = request.form.get('username')
         password = request.form.get('password')
@@ -141,33 +154,70 @@ def register():
 
         if name and sid and username and password:
             clean_id = convert_persian_to_english(sid)
-            
-            # ۱. پردازش و ذخیره عکس پروفایل
             image_db_path = ""
-            if file and file.filename != '':
-                # ساخت نام امن برای عکس ترکیبی از شماره دانشجویی و اسم فایل
-                filename = secure_filename(f"{clean_id}_{file.filename}")
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
-                image_db_path = f"uploads/profiles/{filename}"
-
-            # ۲. هش کردن رمز عبور برای امنیت بالا
-            hashed_password = generate_password_hash(password)
-
-            # ۳. ارسال به دیتابیس
-            status, msg = db.add_student(clean_id, name, username, hashed_password, image_db_path)
             
-            if status:
-                flash("هویت با موفقیت ثبت شد.", "success")
-                # انتقال به صفحه صدور کارت با شماره دانشجویی
-                return redirect(url_for('view_card', sid=clean_id))
-            else:
-                flash(msg, "error")
+            try:
+                # حالت اول: کاربر فایل عکس را دستی آپلود کرده است
+                if file and file.filename != '':
+                    filename = secure_filename(f"{clean_id}_{file.filename}")
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    file.save(filepath)
+                    image_db_path = f"uploads/profiles/{filename}"
+                
+                # حالت دوم: کاربر با گوگل آمده و عکس پروفایل گوگل دارد
+                elif session.get('google_picture'):
+                    pic_response = requests.get(session.get('google_picture'))
+                    filename = secure_filename(f"{clean_id}_google.jpg")
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    with open(filepath, 'wb') as f:
+                        f.write(pic_response.content)
+                    image_db_path = f"uploads/profiles/{filename}"
+
+                # هش کردن رمز و ثبت در دیتابیس
+                hashed_password = generate_password_hash(password)
+                status, msg = db.add_student(clean_id, name, username, hashed_password, image_db_path)
+                
+                if status:
+                    # پاک کردن اطلاعات موقت گوگل از سشن پس از ثبت‌نام موفق
+                    session.pop('google_name', None)
+                    session.pop('google_email', None)
+                    session.pop('google_picture', None)
+                    
+                    flash("هویت با موفقیت ثبت شد.", "success")
+                    return redirect(url_for('view_card', sid=clean_id))
+                else:
+                    flash(msg, "error")
+            except Exception as e:
+                flash(f"خطا در پردازش اطلاعات: {e}", "error")
         else:
             flash("لطفاً تمام فیلدها را پر کنید.", "error")
             
     return render_template('register.html')
 
+@app.route('/login/google')
+def login_google():
+    # هدایت دانشجو به صفحه تایید گوگل
+    redirect_uri = url_for('auth_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@app.route('/auth/callback')
+def auth_callback():
+    try:
+        # دریافت اطلاعات پروفایل از گوگل
+        token = google.authorize_access_token()
+        user_info = token.get('userinfo')
+        
+        # ذخیره اطلاعات در حافظه موقت (Session) برای فرم ثبت‌نام
+        session['google_name'] = user_info.get('name')
+        session['google_email'] = user_info.get('email')
+        session['google_picture'] = user_info.get('picture')
+        
+        flash(f"سلام {user_info.get('name')}! اطلاعات شما دریافت شد. فرم را تکمیل کنید.", "success")
+        return redirect(url_for('register'))
+    except Exception as e:
+        flash("خطا در دریافت اطلاعات از گوگل.", "error")
+        return redirect(url_for('register'))
+    
 @app.route('/card', methods=['GET', 'POST'])
 def view_card():
     sid = request.args.get('sid') or request.form.get('student_id')

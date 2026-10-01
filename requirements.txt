@@ -4,3 +4,6 @@ qrcode[pil]==7.4.2
 reportlab==4.1.0
 arabic-reshaper==3.0.0
 python-bidi==0.4.2
+authlib
+requests
+python-dotenv
