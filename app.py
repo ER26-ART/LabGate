@@ -195,29 +195,107 @@ def leaderboard():
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
+    try:
+        # بررسی وضعیت لاگین
+        if not session.get('admin_logged_in'):
+            if request.method == 'POST':
+                password = request.form.get('password')
+                if password == '1234':
+                    session['admin_logged_in'] = True
+                    return redirect(url_for('admin'))
+                else:
+                    flash("احراز هویت ناموفق بود.", "error")
+            return render_template('admin_login.html')
+        
+        # استخراج داده‌ها از دیتابیس
+        logs_df = db.get_all_logs_df()
+        students_df = db.get_all_students_df()
+        
+        raw_students = db.get_all_students_raw() 
+        raw_logs = db.get_all_logs_raw() 
+        
+        active_count = len(logs_df[logs_df['زمان خروج'] == "---"]) if not logs_df.empty else 0
+        stats = {
+            'students': len(students_df),
+            'logs': len(logs_df),
+            'active': active_count
+        }
+        
+        # رندر کردن صفحه داشبورد
+        return render_template('admin.html', stats=stats, 
+                               logs_data=raw_logs, 
+                               students_data=raw_students,
+                               logs_table=logs_df.to_html(classes='dataframe', index=False) if not logs_df.empty else None,
+                               students_table=students_df.to_html(classes='dataframe', index=False) if not students_df.empty else None)
+                               
+    except Exception as e:
+        # اگر هرجایی از مسیر بالا خراب شود، ارور دقیق روی صفحه چاپ می‌شود
+        import traceback
+        error_details = traceback.format_exc()
+        return f"<h3 style='color:red; direction:rtl; font-family:tahoma; padding:20px;'>خطای سرور در بارگذاری داشبورد:</h3><pre style='direction:ltr; text-align:left; background:#111; color:#0f0; padding:20px; font-size:14px;'>{error_details}</pre>", 500
+# ---------------- مسیرهای مدیریت (CRUD) ----------------
+
+@app.route('/admin/delete_log/<int:log_id>', methods=['POST'])
+def delete_log(log_id):
     if not session.get('admin_logged_in'):
-        if request.method == 'POST':
-            password = request.form.get('password')
-            if password == '1234':
-                session['admin_logged_in'] = True
-                return redirect(url_for('admin'))
-            else:
-                flash("احراز هویت ناموفق بود.", "error")
-        return render_template('admin_login.html')
+        return redirect(url_for('admin'))
+        
+    if db.delete_log(log_id):
+         flash("رکورد تردد با موفقیت حذف شد.", "success")
+    else:
+         flash("خطا در حذف رکورد.", "error")
+    return redirect(url_for('admin'))
+
+@app.route('/admin/edit_log', methods=['POST'])
+def edit_log():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin'))
+        
+    log_id = request.form.get('log_id')
+    new_entry = request.form.get('enter_time')
+    new_exit = request.form.get('exit_time')
     
-    logs_df = db.get_all_logs_df()
-    students_df = db.get_all_students_df()
+    # اگر کاربر در فرم "---" را برای خروج گذاشته بود، آن را به خالی تغییر می‌دهیم
+    if new_exit == "---":
+         new_exit = ""
+         
+    if db.update_log_time(log_id, new_entry, new_exit):
+        flash("ساعات تردد با موفقیت اصلاح شد.", "success")
+    else:
+        flash("خطا در آپدیت زمان تردد.", "error")
+    return redirect(url_for('admin'))
+
+@app.route('/admin/delete_student/<student_id>', methods=['POST'])
+def delete_student_route(student_id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin'))
+        
+    if db.delete_student(student_id):
+        flash("کاربر و تمامی سوابق وی حذف شدند.", "success")
+    else:
+        flash("خطا در حذف کاربر.", "error")
+    return redirect(url_for('admin'))
+
+@app.route('/admin/edit_student', methods=['POST'])
+def edit_student_route():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin'))
+        
+    old_id = request.form.get('old_student_id')
+    new_id = request.form.get('student_id')
+    name = request.form.get('name')
+    username = request.form.get('username')
     
-    active_count = len(logs_df[logs_df['زمان خروج'] == "---"]) if not logs_df.empty else 0
-    stats = {
-        'students': len(students_df),
-        'logs': len(logs_df),
-        'active': active_count
-    }
-    
-    return render_template('admin.html', stats=stats, 
-                           logs_table=logs_df.to_html(classes='dataframe', index=False) if not logs_df.empty else None,
-                           students_table=students_df.to_html(classes='dataframe', index=False) if not students_df.empty else None)
+    clean_old_id = convert_persian_to_english(old_id)
+    clean_new_id = convert_persian_to_english(new_id)
+
+    status, msg = db.update_student(clean_old_id, clean_new_id, name, username)
+    if status:
+        flash(msg, "success")
+    else:
+        flash(msg, "error")
+        
+    return redirect(url_for('admin'))
 
 @app.route('/logout')
 def logout():

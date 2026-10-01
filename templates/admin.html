@@ -1,21 +1,182 @@
 {% extends 'base.html' %}
+
 {% block content %}
 <div class="metrics-container">
     <div class="metric-card"><h3>کل اعضای ثبت‌نامی</h3><p>{{ stats.students }} نفر</p></div>
     <div class="metric-card"><h3>تعداد کل ترددها</h3><p>{{ stats.logs }} رکورد</p></div>
     <div class="metric-card"><h3>حاضرین فعلی</h3><p>{{ stats.active }} نفر</p></div>
 </div>
+
 <div class="glass-panel" style="text-align: right;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3>تاریخچه سیستم</h3>
-        <a href="{{ url_for('logout') }}" class="btn">پایان نشست</a>
+        <h3>داشبورد مدیریت پیشرفته</h3>
+        <a href="{{ url_for('logout') }}" class="btn" style="border-color: #EF4444; color: #EF4444;">پایان نشست</a>
     </div>
+    
+    <!-- دکمه‌های دانلود -->
     <a href="{{ url_for('download_pdf') }}" class="btn btn-primary">دانلود PDF ترددها</a>
     <a href="{{ url_for('download_csv', type='logs') }}" class="btn">دانلود CSV ترددها</a>
     <a href="{{ url_for('download_csv', type='students') }}" class="btn">دانلود لیست اعضا</a>
+    
     <hr style="border-color: rgba(255,255,255,0.05); margin: 20px 0;">
-    <div style="overflow-x: auto;">
-        {% if logs_table %}{{ logs_table | safe }}{% else %}<p>رکوردی یافت نشد.</p>{% endif %}
+
+    <!-- ========================================== -->
+    <!-- بخش اول: جدول مدیریت ترددها -->
+    <!-- ========================================== -->
+    <h4 style="color: #38BDF8; font-weight: 300;">مدیریت لحظه‌ای ترددها</h4>
+    <div style="overflow-x: auto; margin-bottom: 40px; padding-bottom: 10px;">
+        {% if logs_data %}
+        <table class="dataframe">
+            <thead>
+                <tr>
+                    <th>شناسه تردد</th>
+                    <th>شماره دانشجویی</th>
+                    <th>نام دانشجو</th>
+                    <th>زمان ورود</th>
+                    <th>زمان خروج</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs_data %}
+                <tr>
+                    <td>{{ log.id }}</td>
+                    <td>{{ log.student_id }}</td>
+                    <td>{{ log.name }}</td>
+                    <td style="direction: ltr;">{{ log.entry_time }}</td>
+                    <td style="direction: ltr;">{{ log.exit_time }}</td>
+                    <td>
+                        <button onclick="openEditLogModal('{{ log.id }}', '{{ log.entry_time }}', '{{ log.exit_time }}')" class="btn" style="padding: 5px 15px; font-size: 12px; border-color: #F59E0B; color: #F59E0B;">اصلاح زمان</button>
+                        
+                        <form action="{{ url_for('delete_log', log_id=log.id) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn" style="padding: 5px 15px; font-size: 12px; border-color: #EF4444; color: #EF4444; margin-right: 5px;" onclick="return confirm('آیا از حذف این رکورد تردد مطمئن هستید؟');">حذف</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="text-align: center; color: #94A3B8;">رکوردی برای تردد یافت نشد.</p>
+        {% endif %}
+    </div>
+
+    <!-- ========================================== -->
+    <!-- بخش دوم: جدول مدیریت اعضا (دانشجویان) -->
+    <!-- ========================================== -->
+    <hr style="border-color: rgba(255,255,255,0.05); margin: 20px 0;">
+    <h4 style="color: #10B981; font-weight: 300;">مدیریت اعضای سیستم</h4>
+    <div style="overflow-x: auto; padding-bottom: 10px;">
+        {% if students_data %}
+        <table class="dataframe">
+            <thead>
+                <tr>
+                    <th>شماره دانشجویی</th>
+                    <th>نام و نام خانوادگی</th>
+                    <th>نام کاربری</th>
+                    <th>عملیات سیستم</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students_data %}
+                <tr>
+                    <!-- توجه: این ایندکس‌ها بر اساس دیتای خام ارسالی از دیتابیس است (id, name, username) -->
+                    <td>{{ student[0] }}</td> 
+                    <td>{{ student[1] }}</td>
+                    <td>{{ student[2] }}</td>
+                    <td>
+                        <button onclick="openEditStudentModal('{{ student[0] }}', '{{ student[1] }}', '{{ student[2] }}')" class="btn" style="padding: 5px 15px; font-size: 12px; border-color: #F59E0B; color: #F59E0B;">ویرایش هویت</button>
+                        
+                        <form action="{{ url_for('delete_student_route', student_id=student[0]) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn" style="padding: 5px 15px; font-size: 12px; border-color: #EF4444; color: #EF4444; margin-right: 5px;" onclick="return confirm('هشدار: حذف کاربر باعث پاک شدن تمام سوابق تردد او می‌شود! آیا ادامه می‌دهید؟');">حذف کامل</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="text-align: center; color: #94A3B8;">هیچ عضوی در سیستم ثبت نشده است.</p>
+        {% endif %}
     </div>
 </div>
+
+<!-- ========================================== -->
+<!-- مودال‌های ویرایش (پنجره‌های بازشو با استایل شیشه‌ای) -->
+<!-- ========================================== -->
+
+<!-- ۱. مودال اصلاح ساعت تردد -->
+<div id="editLogModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="glass-panel" style="width: 90%; max-width: 400px; position: relative;">
+        <!-- دکمه بستن -->
+        <span onclick="document.getElementById('editLogModal').style.display='none'" style="position: absolute; top: 15px; left: 20px; cursor: pointer; color: #EF4444; font-size: 20px;">✖</span>
+        
+        <h3 style="margin-top: 0; font-weight: 300;">اصلاح ساعات تردد</h3>
+        <br>
+        <form action="{{ url_for('edit_log') }}" method="POST">
+            <input type="hidden" name="log_id" id="edit_log_id">
+            
+            <p style="text-align: right; margin: 0 0 5px 0; font-size: 14px; color: #94A3B8;">زمان ورود:</p>
+            <input type="text" name="enter_time" id="edit_enter_time" placeholder="مثال: 2026-10-01 14:30:00" style="direction: ltr;" required>
+            
+            <p style="text-align: right; margin: 0 0 5px 0; font-size: 14px; color: #94A3B8;">زمان خروج (برای حذف خروج --- بگذارید):</p>
+            <input type="text" name="exit_time" id="edit_exit_time" placeholder="مثال: 2026-10-01 16:00:00" style="direction: ltr;">
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">ثبت تغییرات زمان</button>
+        </form>
+    </div>
+</div>
+
+<!-- ۲. مودال ویرایش اطلاعات دانشجو -->
+<div id="editStudentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="glass-panel" style="width: 90%; max-width: 400px; position: relative;">
+        <!-- دکمه بستن -->
+        <span onclick="document.getElementById('editStudentModal').style.display='none'" style="position: absolute; top: 15px; left: 20px; cursor: pointer; color: #EF4444; font-size: 20px;">✖</span>
+        
+        <h3 style="margin-top: 0; font-weight: 300;">ویرایش هویت</h3>
+        <br>
+        <form action="{{ url_for('edit_student_route') }}" method="POST">
+            <!-- ذخیره آیدی قدیمی برای پیدا کردن کاربر در دیتابیس -->
+            <input type="hidden" name="old_student_id" id="edit_old_student_id">
+            
+            <p style="text-align: right; margin: 0 0 5px 0; font-size: 14px; color: #94A3B8;">شماره دانشجویی:</p>
+            <input type="text" name="student_id" id="edit_student_id" inputmode="numeric" required>
+            
+            <p style="text-align: right; margin: 0 0 5px 0; font-size: 14px; color: #94A3B8;">نام و نام خانوادگی:</p>
+            <input type="text" name="name" id="edit_name" required>
+            
+            <p style="text-align: right; margin: 0 0 5px 0; font-size: 14px; color: #94A3B8;">نام کاربری:</p>
+            <input type="text" name="username" id="edit_username" style="direction: ltr;" required>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">ذخیره تغییرات هویت</button>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- کدهای جاوااسکریپت برای کنترل مودال‌ها -->
+<!-- ========================================== -->
+<script>
+// باز کردن پنجره ویرایش رکورد تردد
+function openEditLogModal(id, enter, exit) {
+    document.getElementById('edit_log_id').value = id;
+    document.getElementById('edit_enter_time').value = (enter && enter !== 'None' && enter !== '---') ? enter : '';
+    document.getElementById('edit_exit_time').value = (exit && exit !== 'None' && exit !== '---') ? exit : '---';
+    
+    // نمایش مدال با حالت flex برای وسط چین شدن
+    document.getElementById('editLogModal').style.display = 'flex';
+}
+
+// باز کردن پنجره ویرایش کاربر
+function openEditStudentModal(id, name, username) {
+    document.getElementById('edit_old_student_id').value = id; // برای ارسال به بک‌اند
+    document.getElementById('edit_student_id').value = id;     // برای نمایش به کاربر
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_username').value = username;
+    
+    // نمایش مدال
+    document.getElementById('editStudentModal').style.display = 'flex';
+}
+</script>
+
 {% endblock %}

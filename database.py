@@ -218,14 +218,74 @@ class WorkshopDB:
         except Exception as e:
             print(f"Error fetching top student of the week: {e}")
             return None
-    def delete_student(self, student_id):
-        """حذف کامل یک دانشجو و تمام رکوردهای تردد او"""
+    # ==========================================
+    # توابع مدیریت خام (ارسال به فرمت دیکشنری/لیست برای ادمین)
+    # ==========================================
+    def get_all_students_raw(self):
         try:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
-                # ابتدا حذف تمام رکوردهای تردد این شخص
+                cursor.execute("SELECT student_id, name, username FROM students")
+                return cursor.fetchall()
+        except Exception as e:
+            print(f"Error fetching raw students: {e}")
+            return []
+
+    def get_all_logs_raw(self):
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT a.id, a.student_id, s.name, a.entry_time, a.exit_time
+                    FROM attendance_logs a
+                    JOIN students s ON a.student_id = s.student_id
+                    ORDER BY a.entry_time DESC
+                ''')
+                columns = ['id', 'student_id', 'name', 'entry_time', 'exit_time']
+                result = [dict(zip(columns, row)) for row in cursor.fetchall()]
+                for item in result:
+                    if not item['exit_time']:
+                         item['exit_time'] = "---"
+                return result
+        except Exception as e:
+            print(f"Error fetching raw logs: {e}")
+            return []
+
+    # ==========================================
+    # توابع عملیاتی مدیریت پیشرفته (ویرایش و حذف)
+    # ==========================================
+    def delete_log(self, log_id):
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM attendance_logs WHERE id = ?", (log_id,))
+                conn.commit()
+                return True
+        except Exception as e:
+            print(f"Error deleting log: {e}")
+            return False
+
+    def update_log_time(self, log_id, new_entry, new_exit):
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                exit_value = new_exit if (new_exit and new_exit.strip() != "") else None
+                cursor.execute('''
+                    UPDATE attendance_logs 
+                    SET entry_time = ?, exit_time = ? 
+                    WHERE id = ?
+                ''', (new_entry, exit_value, log_id))
+                conn.commit()
+                return True
+        except Exception as e:
+            print(f"Error updating log time: {e}")
+            return False
+
+    def delete_student(self, student_id):
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
                 cursor.execute("DELETE FROM attendance_logs WHERE student_id = ?", (student_id,))
-                # سپس حذف خود شخص از جدول اصلی
                 cursor.execute("DELETE FROM students WHERE student_id = ?", (student_id,))
                 conn.commit()
                 return True
@@ -233,30 +293,16 @@ class WorkshopDB:
             print(f"Error deleting student: {e}")
             return False
 
-    def get_student_info(self, student_id):
-        """دریافت اطلاعات یک شخص برای نمایش در فرم ویرایش"""
-        try:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT student_id, name, username FROM students WHERE student_id = ?", (student_id,))
-                return cursor.fetchone()
-        except Exception as e:
-            print(f"Error fetching student info: {e}")
-            return None
-
     def update_student(self, old_student_id, new_student_id, name, username):
-        """ذخیره اطلاعات جدید دانشجو پس از ویرایش"""
         try:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
-                # آپدیت جدول اصلی
                 cursor.execute('''
                     UPDATE students 
                     SET student_id = ?, name = ?, username = ?
                     WHERE student_id = ?
                 ''', (new_student_id, name, username, old_student_id))
                 
-                # اگر شماره دانشجویی عوض شد، باید رکوردهای تردد او هم با شماره جدید آپدیت شوند
                 if old_student_id != new_student_id:
                     cursor.execute('''
                         UPDATE attendance_logs 
