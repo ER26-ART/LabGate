@@ -18,7 +18,6 @@ from werkzeug.security import generate_password_hash
 import requests
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
-import os
 
 load_dotenv()
 
