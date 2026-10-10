@@ -7,3 +7,4 @@ python-bidi==0.4.2
 authlib
 requests
 python-dotenv
+gunicorn
