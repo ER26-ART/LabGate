@@ -8,4 +8,6 @@ services:
       - ./uploads:/app/static/uploads      
     env_file:
       - .env
+    environment:
+      - TZ=Asia/Tehran
     restart: unless-stopped
