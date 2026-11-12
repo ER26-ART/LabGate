@@ -8,3 +8,4 @@ authlib
 requests
 python-dotenv
 gunicorn
+apscheduler
