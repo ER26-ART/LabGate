@@ -18,6 +18,8 @@ from werkzeug.security import generate_password_hash
 import requests
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
+from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
 
 load_dotenv()
 
@@ -59,6 +61,14 @@ def generate_qrcode_image(student_id):
     img.save(buffer, format="PNG")
     buffer.seek(0)
     return buffer
+def automatic_weekly_reset():
+    db.set_leaderboard_reset()
+    print("سیستم: جدول افراد برتر برای هفته جدید به صورت خودکار ریست شد.")
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=automatic_weekly_reset, trigger="cron", day_of_week='fri', hour=23, minute=59)
+scheduler.start()
+atexit.register(lambda: scheduler.shutdown())
 
 def generate_pdf_report(df):
     buffer = BytesIO()
